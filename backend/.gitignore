@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# Video files (large binary assets, place manually)
+videos/*.mp4
+videos/*.avi
+videos/*.mov
+
+# Environment
+.env
