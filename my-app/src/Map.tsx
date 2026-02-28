@@ -1,14 +1,20 @@
-import './Map.css'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
+import Map from 'react-map-gl/mapbox'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
-export function LeafletMap() {
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiYm16aWZjYWsiLCJhIjoiY21tNnB2OHhqMGtuNjJwcTNpZXcxeTBpZyJ9.vAvY5WflQsy8HPlbRnxViw'
+
+export function LoadMap() {
   return (
-    <MapContainer center={[51.505, -0.09] as [number, number]} zoom={13} style={{ height: '100vh', width: '100%' }}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <Marker position={[51.505, -0.09] as [number, number]}>
-        <Popup>A marker!</Popup>
-      </Marker>
-    </MapContainer>
+    <Map
+      initialViewState={{
+        //39.68053620506273, -75.75408714292978
+        longitude:  -75.75408714292978,
+        latitude:39.68053620506273,
+        zoom: 16
+      }}
+      style={{ width: '100vh', height: '100vh' }}
+      mapStyle="mapbox://styles/mapbox/dark-v11"
+      mapboxAccessToken={MAPBOX_TOKEN}
+    />
   )
 }

@@ -1,26 +1,62 @@
 import { useState } from 'react'
 import './App.css'
-import 'leaflet/dist/leaflet.css'
-import { LeafletMap } from './Map'
+import { LoadMap } from './Map'
 import { CameraFeed } from './Cams'
+type Mode = 'map' | 'cam' | 'split'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [mode, setMode] = useState<Mode>('split')
 
   return (
-    <>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', margin: 0 }}>
+      
+      {/* Navbar */}
+      <nav style={{
+        display: 'flex',
+        gap: '8px',
+        padding: '10px 20px',
+        backgroundColor: '#1a1a1a',
+        borderBottom: '1px solid #333'
+      }}>
+        <button onClick={() => setMode('map')} style={btnStyle(mode === 'map')}>Map</button>
+        <button onClick={() => setMode('cam')} style={btnStyle(mode === 'cam')}>Camera</button>
+        <button onClick={() => setMode('split')} style={btnStyle(mode === 'split')}>Split</button>
+      </nav>
+
+      {/* Content */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        
+        {(mode === 'map' || mode === 'split') && (
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <LoadMap />
+          </div>
+        )}
+
+        {mode === 'split' && (
+          <div style={{ width: '1px', backgroundColor: '#444' }} />
+        )}
+
+        {(mode === 'cam' || mode === 'split') && (
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <CameraFeed />
+          </div>
+        )}
+
       </div>
-      <LeafletMap />
-      <div style={{ width: '400px', margin: '0 auto' }}>
-      <CameraFeed />
     </div>
-    </>
   )
+}
+
+function btnStyle(active: boolean): React.CSSProperties {
+  return {
+    padding: '8px 20px',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    backgroundColor: active ? '#555' : '#2a2a2a',
+    color: active ? '#fff' : '#aaa',
+    fontWeight: active ? 'bold' : 'normal',
+  }
 }
 
 export default App
