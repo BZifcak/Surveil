@@ -1,0 +1,19 @@
+{
+  "name": "surveil",
+  "version": "1.0.0",
+  "description": "Integrated Security Application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BZifcak/Surveil.git"
+  },
+  "author": "BZ, FM, JW",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BZifcak/Surveil/issues"
+  },
+  "homepage": "https://github.com/BZifcak/Surveil#readme"
+}
