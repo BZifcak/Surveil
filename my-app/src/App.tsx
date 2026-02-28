@@ -41,7 +41,7 @@ function App() {
 
         {(mode === 'cam' || mode === 'split') && (
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <CameraFeed />
+            <CameraGrid cameraCount={12} columns={6}images={images}/>
           </div>
         )}
 
