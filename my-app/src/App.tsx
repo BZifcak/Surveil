@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import './App.css'
 import { LoadMap } from './Map'
-import { CameraFeed } from './Cams'
+import CameraGrid from './Cams'
 type Mode = 'map' | 'cam' | 'split'
+
+const imageModules = import.meta.glob('./cameras/*.{jpg,jpeg,png,webp,gif}', { eager: true })
+const images = Object.values(imageModules).map((mod: any) => mod.default)
 
 function App() {
   const [mode, setMode] = useState<Mode>('split')
