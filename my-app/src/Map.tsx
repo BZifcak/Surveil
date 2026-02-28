@@ -1,7 +1,7 @@
 import Map from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiYm16aWZjYWsiLCJhIjoiY21tNnB2OHhqMGtuNjJwcTNpZXcxeTBpZyJ9.vAvY5WflQsy8HPlbRnxViw'
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 
 export function LoadMap() {
   return (
