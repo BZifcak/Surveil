@@ -1,0 +1,67 @@
+Help me find datasets for our project. We're thinking about a different idea: a surveillance dashboard that integrates with cameras around campus and uses AI to detect threats and accidents, reporting them for human review and creating instant accessible police response.
+Interesting wrinkle! Let me think through this with you.
+
+**What is the Smalltalk mini-category likely asking for?** MLH mini-categories sponsored by specific tools usually want you to meaningfully integrate their API/platform, not just bolt it on. So the question is: does Smalltalk fit naturally, or does it feel forced?
+
+**Where Smalltalk could genuinely fit in a surveillance dashboard:**
+
+The most natural integration would be the **human review / alert communication layer**. When the AI detects a threat or accident, instead of just logging it silently, the system sends an instant notification or opens a live communication channel — officers get alerted via Smalltalk, can acknowledge the alert, coordinate response, and communicate with dispatch all within the dashboard. This actually strengthens your "accessible police response" pitch significantly because you're not just detecting threats, you're closing the loop on the response workflow.
+
+You could also use it for a **witness/reporter flow** — students near an incident can be prompted to join a Smalltalk channel tied to that incident, giving officers real-time ground-level info.
+
+**The risk** is that judges for the main Security & Safety category might see the Smalltalk integration as scope creep if it's not polished. But if you frame the communication layer as a core feature rather than an add-on, it actually makes the project more complete — detection → alert → human coordination is a full pipeline, which is more impressive than detection alone.
+
+My honest take: it's worth doing if one person owns the Smalltalk integration while others handle the CV pipeline and dashboard. It gives you an extra prize vector without derailing the main build. Would you want help sketching out the full system architecture with this included?
+
+so if we are making a react dashboard on the web, how could we possibly integrate this with camera streams locally? The test files would not be loaded in on the dashboard site that would be inefficient. I'm thinking we have looping 30 seconds of video for like 9 test cases that represent "cameras" in the surveillance system. So this should come from some kind of external API. Like we could have a client app running on the same machine that communicates with it over localhost or something  that streams the camera in a loop and runs the ai detections. Is this possible?
+
+Given you're at a hackathon, here's the fastest path to something demoable:
+
+## Start with the Python backend first
+
+Get the streaming server working before touching React at all. If the streams don't work, nothing else matters.
+
+**Step 1: Basic FastAPI server with MJPEG stream**
+Just get one camera looping a video file and streaming to `localhost:8000/stream/cam_0`. Open it in a browser tab, confirm you see video.
+
+```bash
+pip install fastapi uvicorn opencv-python
+```
+
+```python
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+import cv2, time
+
+app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+def stream_video(path):
+    cap = cv2.VideoCapture(path)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            continue
+        _, buffer = cv2.imencode('.jpg', frame)
+        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        time.sleep(1/24)
+
+@app.get("/stream/{cam_id}")
+def stream(cam_id: int):
+    return StreamingResponse(stream_video(f"videos/cam_{cam_id}.mp4"), media_type="multipart/x-mixed-replace; boundary=frame")
+```
+
+**Step 2: Add the WebSocket for detections**
+Once video works, bolt on a WebSocket endpoint that runs YOLO on frames and pushes events.
+
+**Step 3: Then build React**
+By now your backend API is stable and you're just consuming it.
+
+## What do you have so far?
+- Do you have the 9 test video files picked out?
+- Are you using a specific AI model (YOLO?), or is that still TBD?
+- Is anyone else on your team starting the React side simultaneously?
+
+That'll help me tell you exactly what to scaffold first.

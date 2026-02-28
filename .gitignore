@@ -1,3 +1,6 @@
+# Don't commit videos to repo!!
+backend/videos/*
+
 # Logs
 logs
 *.log
