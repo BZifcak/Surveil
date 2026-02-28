@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import 'leaflet/dist/leaflet.css'
 import { LeafletMap } from './Map'
+import { CameraFeed } from './Cams'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -15,6 +16,9 @@ function App() {
         </button>
       </div>
       <LeafletMap />
+      <div style={{ width: '400px', margin: '0 auto' }}>
+      <CameraFeed />
+    </div>
     </>
   )
 }
