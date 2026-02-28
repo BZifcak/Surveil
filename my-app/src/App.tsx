@@ -2,7 +2,10 @@ import { useState } from 'react'
 import './App.css'
 import 'leaflet/dist/leaflet.css'
 import { LeafletMap } from './Map'
-import { CameraFeed } from './Cams'
+import CameraGrid from './Cams'
+
+const imageModules = import.meta.glob('./cameras/*.{jpg,jpeg,png,webp,gif}', { eager: true })
+const images = Object.values(imageModules).map((mod: any) => mod.default)
 
 function App() {
   const [count, setCount] = useState(0)
@@ -16,9 +19,10 @@ function App() {
         </button>
       </div>
       <LeafletMap />
-      <div style={{ width: '400px', margin: '0 auto' }}>
-      <CameraFeed />
-    </div>
+      <div className="App">
+        <h1>Security Monitor</h1>
+        <CameraGrid cameraCount={12} columns={6} images={images}/>
+      </div>
     </>
   )
 }
