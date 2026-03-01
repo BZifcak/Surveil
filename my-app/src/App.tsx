@@ -1,16 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { LoadMap } from './Map'
 import CameraGrid from './Cams'
 
 type Mode = 'map' | 'cam' | 'split'
 
-const imageModules = import.meta.glob<{ default: string }>('./cameras/*.{jpg,jpeg,png,webp,gif}', { eager: true })
+const imageModules = import.meta.glob<{ default: string }>('./images/*.{jpg,jpeg,png,webp,gif}', { eager: true })
 const images = Object.values(imageModules).map((mod) => mod.default)
 
 function App() {
   const cameraCount = 12
-  const [mode, setMode] = useState<Mode>('map')
+  const [mode, setMode] = useState<Mode>('split')
   const [selected, setSelected] = useState<number>(1)
   const [cameraSelectorOpen, setCameraSelectorOpen] = useState<boolean>(false)
 
@@ -28,6 +28,35 @@ function App() {
     })
   }
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          (target as HTMLElement).isContentEditable)
+      ) {
+        return
+      }
+
+      if (mode !== 'cam' && mode !== 'split') {
+        return
+      }
+
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        shiftCamera(-1)
+      } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault()
+        shiftCamera(1)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mode])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', margin: 0, minWidth: 0 }}>
       {/* Navbar */}
@@ -39,9 +68,8 @@ function App() {
         backgroundColor: '#1a1a1a',
         borderBottom: '1px solid #333'
       }}>
-        <button onClick={() => setModeAndCloseSelector('map')} style={btnStyle(mode === 'map')}>Map</button>
-        <button onClick={() => setModeAndCloseSelector('cam')} style={btnStyle(mode === 'cam')}>Camera</button>
         <button onClick={() => setModeAndCloseSelector('split')} style={btnStyle(mode === 'split')}>Split</button>
+        <button onClick={() => setModeAndCloseSelector('cam')} style={btnStyle(mode === 'cam')}>Camera</button>
         {mode === 'cam' && (
           <button
             onClick={() => setCameraSelectorOpen((open) => !open)}
@@ -71,40 +99,28 @@ function App() {
 
         {(mode === 'cam' || mode === 'split') && (
           <div style={{ flex: 1, overflow: 'hidden', minWidth: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            <button
-              onClick={() => shiftCamera(-1)}
-              style={arrowBtnStyle('left')}
-              aria-label="Previous camera"
-            >
-              ←
-            </button>
-            <button
-              onClick={() => shiftCamera(1)}
-              style={arrowBtnStyle('right')}
-              aria-label="Next camera"
-            >
-              →
-            </button>
-            {mode === 'split' && (
-              <div style={{
-                position: 'absolute',
-                top: '10px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 9,
-              }}>
+            {mode === 'cam' && (
+              <>
                 <button
-                  onClick={() => setCameraSelectorOpen((open) => !open)}
-                  style={btnStyle(cameraSelectorOpen)}
+                  onClick={() => shiftCamera(-1)}
+                  style={arrowBtnStyle('left')}
+                  aria-label="Previous camera"
                 >
-                  Cameras
+                  ←
                 </button>
-              </div>
+                <button
+                  onClick={() => shiftCamera(1)}
+                  style={arrowBtnStyle('right')}
+                  aria-label="Next camera"
+                >
+                  →
+                </button>
+              </>
             )}
             <div style={{ flex: 1, minHeight: 0 }}>
             <CameraGrid
               cameraCount={cameraCount}
-              columns={6}
+              columns={4}
               images={images}
               selected={selected}
               onSelect={setSelected}

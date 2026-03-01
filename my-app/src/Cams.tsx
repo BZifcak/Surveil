@@ -54,21 +54,27 @@ const CameraGrid: React.FC<CameraGridProps> = ({
   onSelectorOpenChange,
   edgeToEdge = false,
 }) => {
+  const pageSize = 12;
   const cameras = useMemo(
     () =>
       Array.from({ length: cameraCount }, (_, i) => ({
         id: i + 1,
-        src: images.length ? images[i % images.length] : undefined,
+        src: images[i],
       })),
     [cameraCount, images]
   );
 
   const [internalSelected, setInternalSelected] = useState<number>(1);
   const [internalSelectorOpen, setInternalSelectorOpen] = useState<boolean>(false);
+  const [pageIndex, setPageIndex] = useState<number>(0);
   const isSelectorOpen = selectorOpen ?? internalSelectorOpen;
   const selectedId = selected ?? internalSelected;
   const activeId = cameras.some((cam) => cam.id === selectedId) ? selectedId : cameras[0]?.id;
   const featured = cameras.find((cam) => cam.id === activeId) ?? cameras[0];
+  const pageCount = Math.max(1, Math.ceil(cameras.length / pageSize));
+  const visiblePage = Math.min(pageIndex, pageCount - 1);
+  const pageStart = visiblePage * pageSize;
+  const pageCameras = cameras.slice(pageStart, pageStart + pageSize);
 
   const handleSelect = (id: number) => {
     setInternalSelected(id);
@@ -82,6 +88,42 @@ const CameraGrid: React.FC<CameraGridProps> = ({
 
   if (!featured) {
     return null;
+  }
+
+  if (edgeToEdge) {
+    return (
+      <div className="cam-layout cam-layout--edge">
+        <div
+          className="cam-grid cam-grid--split"
+          style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gridTemplateRows: 'repeat(4, minmax(0, 1fr))' }}
+        >
+          {pageCameras.map((cam) => (
+            <CameraTile
+              key={cam.id}
+              id={cam.id}
+              src={cam.src}
+              selected={cam.id === activeId}
+              onClick={() => handleSelect(cam.id)}
+            />
+          ))}
+        </div>
+
+        <div className={`cam-page-panel ${isSelectorOpen ? 'cam-page-panel--open' : ''}`}>
+          <div className="cam-page-list">
+            {Array.from({ length: pageCount }, (_, i) => (
+              <button
+                key={i + 1}
+                type="button"
+                className={`cam-page-btn ${i === visiblePage ? 'cam-page-btn--active' : ''}`}
+                onClick={() => setPageIndex(i)}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
