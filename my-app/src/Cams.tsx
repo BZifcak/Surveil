@@ -1,70 +1,100 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import './Cam.css';
 
 interface CameraGridProps {
   columns?: number;
   cameraCount?: number;
   images?: string[];
+  selected?: number;
+  onSelect?: (id: number) => void;
 }
 
-const CameraGrid: React.FC<CameraGridProps> = ({ 
-  columns = 2, 
-  cameraCount = 4,
-  images = []
-}) => {
+function CameraTile({
+  id,
+  src,
+  large = false,
+  selected = false,
+  onClick,
+}: {
+  id: number;
+  src?: string;
+  large?: boolean;
+  selected?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(${columns}, 1fr)`,
-      gap: '12px',
-      background: '#1a1a1a',
-      padding: '12px'
-    }}>
-      {Array.from({ length: cameraCount }).map((_, i) => {
-        const src = images[i % images.length] // ✅ cycles through images
-        return (
-          <div key={i} style={{ 
-            background: '#000', 
-            borderRadius: '4px', 
-            overflow: 'hidden',
-            position: 'relative'
-          }}>
-            {src ? (
-              <img
-                src={src}
-                alt={`Camera ${i + 1}`}
-                style={{ width: '100%', display: 'block', objectFit: 'cover', aspectRatio: '16/9' }}
-              />
-            ) : (
-              <div style={{
-                width: '100%',
-                aspectRatio: '16/9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#444',
-                fontSize: '14px',
-                flexDirection: 'column',
-                gap: '8px'
-              }}>
-                <span style={{ fontSize: '32px' }}>📷</span>
-                <span>No Signal</span>
-              </div>
-            )}
-            <div style={{
-              position: 'absolute',
-              bottom: '8px',
-              left: '8px',
-              background: 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              fontSize: '12px',
-              padding: '2px 8px',
-              borderRadius: '4px'
-            }}>
-              CAM {i + 1}
-            </div>
-          </div>
-        )
-      })}
+    <button
+      type="button"
+      className={`cam-tile ${large ? 'cam-tile--large' : ''} ${selected ? 'cam-tile--selected' : ''}`}
+      onClick={onClick}
+    >
+      {src ? (
+        <img src={src} alt={`Camera ${id}`} className="cam-image" />
+      ) : (
+        <div className="cam-empty">
+          <span className="cam-empty-icon">CAM</span>
+          <span>No Signal</span>
+        </div>
+      )}
+      <div className="cam-label">CAM {id}</div>
+    </button>
+  );
+}
+
+const CameraGrid: React.FC<CameraGridProps> = ({
+  columns = 4,
+  cameraCount = 4,
+  images = [],
+  selected,
+  onSelect,
+}) => {
+  const cameras = useMemo(
+    () =>
+      Array.from({ length: cameraCount }, (_, i) => ({
+        id: i + 1,
+        src: images.length ? images[i % images.length] : undefined,
+      })),
+    [cameraCount, images]
+  );
+
+  const [internalSelected, setInternalSelected] = useState<number>(1);
+  const selectedId = selected ?? internalSelected;
+  const activeId = cameras.some((cam) => cam.id === selectedId) ? selectedId : cameras[0]?.id;
+  const featured = cameras.find((cam) => cam.id === activeId) ?? cameras[0];
+  const rest = cameras.filter((cam) => cam.id !== featured?.id);
+
+  const handleSelect = (id: number) => {
+    setInternalSelected(id);
+    onSelect?.(id);
+  };
+
+  if (!featured) {
+    return null;
+  }
+
+  return (
+    <div className="cam-layout">
+      <div className="cam-featured">
+        <CameraTile
+          id={featured.id}
+          src={featured.src}
+          large
+          selected
+          onClick={() => handleSelect(featured.id)}
+        />
+      </div>
+
+      <div className="cam-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        {rest.map((cam) => (
+          <CameraTile
+            key={cam.id}
+            id={cam.id}
+            src={cam.src}
+            selected={cam.id === activeId}
+            onClick={() => handleSelect(cam.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 };

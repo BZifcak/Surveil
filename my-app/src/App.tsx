@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import { LoadMap } from './Map'
 import CameraGrid from './Cams'
+
 type Mode = 'map' | 'cam' | 'split'
 
 const imageModules = import.meta.glob('./cameras/*.{jpg,jpeg,png,webp,gif}', { eager: true })
@@ -9,10 +10,10 @@ const images = Object.values(imageModules).map((mod: any) => mod.default)
 
 function App() {
   const [mode, setMode] = useState<Mode>('split')
+  const [selected, setSelected] = useState<number>(1)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', margin: 0 }}>
-      
       {/* Navbar */}
       <nav style={{
         display: 'flex',
@@ -28,10 +29,9 @@ function App() {
 
       {/* Content */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        
         {(mode === 'map' || mode === 'split') && (
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <LoadMap />
+            <LoadMap selected={selected} onSelect={setSelected} />
           </div>
         )}
 
@@ -41,10 +41,15 @@ function App() {
 
         {(mode === 'cam' || mode === 'split') && (
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <CameraGrid cameraCount={12} columns={6}images={images}/>
+            <CameraGrid
+              cameraCount={12}
+              columns={6}
+              images={images}
+              selected={selected}
+              onSelect={setSelected}
+            />
           </div>
         )}
-
       </div>
     </div>
   )
