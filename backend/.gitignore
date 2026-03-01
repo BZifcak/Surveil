@@ -11,5 +11,11 @@ videos/*.mp4
 videos/*.avi
 videos/*.mov
 
+# Model weights (large binary assets, place manually)
+models/*.pt
+
+# Dataset exploration output
+dataset_samples/
+
 # Environment
 .env
