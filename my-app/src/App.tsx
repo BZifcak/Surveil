@@ -86,15 +86,15 @@ function App() {
 
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
-              <button className="app-hint-btn" aria-label="Keyboard shortcuts">
+              <span className="app-hint-icon" tabIndex={-1} aria-label="Keyboard shortcuts" onFocusCapture={(e) => e.stopPropagation()}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="4" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                  <rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
                   <rect x="3.5" y="6.5" width="2" height="1.5" rx="0.3" fill="currentColor"/>
                   <rect x="7" y="6.5" width="2" height="1.5" rx="0.3" fill="currentColor"/>
                   <rect x="10.5" y="6.5" width="2" height="1.5" rx="0.3" fill="currentColor"/>
                   <rect x="4.5" y="9.5" width="7" height="1.5" rx="0.3" fill="currentColor"/>
                 </svg>
-              </button>
+              </span>
             </Tooltip.Trigger>
             <Tooltip.Portal>
               <Tooltip.Content className="app-tooltip" sideOffset={8} side="bottom">
@@ -128,7 +128,7 @@ function App() {
           )}
 
           {mode === 'split' && (
-            <div style={{ width: '1px', backgroundColor: '#444' }} />
+            <div style={{ width: '1px', backgroundColor: '#1a1a1a' }} />
           )}
 
           {(mode === 'cam' || mode === 'split') && (

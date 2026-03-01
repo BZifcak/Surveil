@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { DetectionEvent } from './useBackend'
+import { formatEventType } from './useBackend'
 import './Log.css'
 
 interface LogProps {
@@ -17,7 +18,9 @@ export default function Log({ events }: LogProps) {
 
   const cameraIds = useMemo(() => {
     const ids = new Set(events.map(e => e.camera_id))
-    return Array.from(ids).sort()
+    return Array.from(ids).sort((a, b) =>
+      parseInt(a.replace('cam_', ''), 10) - parseInt(b.replace('cam_', ''), 10)
+    )
   }, [events])
 
   const eventTypes = useMemo(() => {
@@ -88,7 +91,7 @@ export default function Log({ events }: LogProps) {
         >
           <option value="">All Types</option>
           {eventTypes.map(t => (
-            <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+            <option key={t} value={t}>{formatEventType(t)}</option>
           ))}
         </select>
       </div>
@@ -108,7 +111,7 @@ export default function Log({ events }: LogProps) {
               <tr key={i} className={ev.event_type === 'weapon_detected' ? 'log-row--threat' : ''}>
                 <td>{new Date(ev.timestamp).toLocaleTimeString()}</td>
                 <td>{camLabel(ev.camera_id)}</td>
-                <td>{ev.event_type.replace(/_/g, ' ')}</td>
+                <td>{formatEventType(ev.event_type)}</td>
                 <td>{Math.round(ev.confidence * 100)}%</td>
               </tr>
             ))}

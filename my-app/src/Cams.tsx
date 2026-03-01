@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import './Cam.css'
 import type { CamState, CameraInfo } from './useBackend'
-import { BACKEND } from './useBackend'
+import { BACKEND, formatEventType } from './useBackend'
 
 interface CameraGridProps {
   cameraCount?: number
@@ -12,6 +12,20 @@ interface CameraGridProps {
   apiCameras?: CameraInfo[]
   page?: number
   onPageChange?: (page: number) => void
+}
+
+function Chevron({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d={direction === 'left' ? 'M8 1.5L3 6L8 10.5' : 'M4 1.5L9 6L4 10.5'}
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="square"
+        strokeLinejoin="miter"
+      />
+    </svg>
+  )
 }
 
 // ── Single camera tile ──────────────────────────────────────────────────────
@@ -111,7 +125,7 @@ function StatusPanel({ camId, state }: { camId: number; state?: CamState }) {
             key={i}
             className={`cam-status-event ${evt.event_type === 'weapon_detected' ? 'cam-status-event--threat' : ''}`}
           >
-            {evt.event_type.replace(/_/g, ' ')} — {Math.round(evt.confidence * 100)}%
+            {evt.event_type === 'person_detected' ? 'Person(s) detected' : formatEventType(evt.event_type)}
           </span>
         ))
       )}
@@ -213,14 +227,14 @@ const CameraGrid: React.FC<CameraGridProps> = ({
                 className="cam-page-btn"
                 onClick={() => setPreviewPage((previewPage - 1 + previewPageCount) % previewPageCount)}
               >
-                ←
+                <Chevron direction="left" />
               </button>
               <span className="cam-page-indicator">{previewPage + 1} / {previewPageCount}</span>
               <button
                 className="cam-page-btn"
                 onClick={() => setPreviewPage((previewPage + 1) % previewPageCount)}
               >
-                →
+                <Chevron direction="right" />
               </button>
             </div>
           )}
@@ -264,14 +278,14 @@ const CameraGrid: React.FC<CameraGridProps> = ({
             className="cam-page-btn"
             onClick={() => setGridPage((gridPage - 1 + gridPageCount) % gridPageCount)}
           >
-            ←
+            <Chevron direction="left" />
           </button>
           <span className="cam-page-indicator">{gridPage + 1} / {gridPageCount}</span>
           <button
             className="cam-page-btn"
             onClick={() => setGridPage((gridPage + 1) % gridPageCount)}
           >
-            →
+            <Chevron direction="right" />
           </button>
         </div>
       )}

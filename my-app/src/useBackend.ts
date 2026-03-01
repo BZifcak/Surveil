@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 
 export const BACKEND = 'http://localhost:8000'
+
+export function formatEventType(type: string): string {
+  return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
 const WS_URL = 'ws://localhost:8000/ws/events'
 const THREAT_WINDOW_MS = 10_000
 
@@ -27,12 +31,16 @@ export interface CamState {
   lastEvent: DetectionEvent | null
 }
 
+const MAX_LOG_EVENTS = 500
+const LOG_FLUSH_MS = 1000
+
 export function useBackend() {
   const [cameras, setCameras] = useState<CameraInfo[]>([])
   const [camState, setCamState] = useState<Record<string, CamState>>({})
   const [eventLog, setEventLog] = useState<DetectionEvent[]>([])
   const [threatCount, setThreatCount] = useState(0)
   const wsRef = useRef<WebSocket | null>(null)
+  const logBufferRef = useRef<DetectionEvent[]>([])
 
   // Fetch camera list once
   useEffect(() => {
@@ -40,6 +48,22 @@ export function useBackend() {
       .then(r => r.json())
       .then(setCameras)
       .catch(() => {})
+  }, [])
+
+  // Flush buffered log events once per second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const buf = logBufferRef.current
+      if (buf.length === 0) return
+      logBufferRef.current = []
+      setEventLog(prev => {
+        const merged = [...prev, ...buf]
+        return merged.length > MAX_LOG_EVENTS
+          ? merged.slice(merged.length - MAX_LOG_EVENTS)
+          : merged
+      })
+    }, LOG_FLUSH_MS)
+    return () => clearInterval(timer)
   }, [])
 
   // WebSocket with auto-reconnect
@@ -51,7 +75,7 @@ export function useBackend() {
       ws.onmessage = e => {
         try {
           const ev: DetectionEvent = JSON.parse(e.data)
-          setEventLog(prev => [...prev, ev])
+          logBufferRef.current.push(ev)
           if (ev.event_type === 'weapon_detected') {
             setThreatCount(c => c + 1)
           }

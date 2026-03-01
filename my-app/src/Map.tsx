@@ -4,6 +4,7 @@ import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import './Map.css'
 import type { CamState } from './useBackend'
+import { formatEventType } from './useBackend'
 
 type CameraLocation = {
   id: number
@@ -61,7 +62,7 @@ function CameraMarker({
     const bubbleHtml = hasThreat && lastEvent
       ? `<div class="map-bubble">
            <span class="map-bubble-text">
-             &#x1F6A8; ${lastEvent.event_type.replace(/_/g, ' ')}
+             &#x1F6A8; ${formatEventType(lastEvent.event_type)}
              &nbsp;${Math.round(lastEvent.confidence * 100)}%
            </span>
            <span class="map-bubble-arrow"></span>
