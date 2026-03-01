@@ -10,6 +10,8 @@ interface CameraGridProps {
   selectorOpen?: boolean;
   onSelectorOpenChange?: (open: boolean) => void;
   edgeToEdge?: boolean;
+  panelPageIndex?: number;
+  onPanelPageChange?: (page: number) => void;
 }
 
 function CameraTile({
@@ -45,7 +47,6 @@ function CameraTile({
 }
 
 const CameraGrid: React.FC<CameraGridProps> = ({
-  columns = 4,
   cameraCount = 4,
   images = [],
   selected,
@@ -53,8 +54,11 @@ const CameraGrid: React.FC<CameraGridProps> = ({
   selectorOpen,
   onSelectorOpenChange,
   edgeToEdge = false,
+  panelPageIndex,
+  onPanelPageChange,
 }) => {
-  const pageSize = 12;
+  const splitPageSize = 12;
+  const panelPageSize = 4;
   const cameras = useMemo(
     () =>
       Array.from({ length: cameraCount }, (_, i) => ({
@@ -66,15 +70,20 @@ const CameraGrid: React.FC<CameraGridProps> = ({
 
   const [internalSelected, setInternalSelected] = useState<number>(1);
   const [internalSelectorOpen, setInternalSelectorOpen] = useState<boolean>(false);
-  const [pageIndex, setPageIndex] = useState<number>(0);
+  const [splitPageIndex, setSplitPageIndex] = useState<number>(0);
+  const [internalPanelPageIndex, setInternalPanelPageIndex] = useState<number>(0);
   const isSelectorOpen = selectorOpen ?? internalSelectorOpen;
   const selectedId = selected ?? internalSelected;
   const activeId = cameras.some((cam) => cam.id === selectedId) ? selectedId : cameras[0]?.id;
   const featured = cameras.find((cam) => cam.id === activeId) ?? cameras[0];
-  const pageCount = Math.max(1, Math.ceil(cameras.length / pageSize));
-  const visiblePage = Math.min(pageIndex, pageCount - 1);
-  const pageStart = visiblePage * pageSize;
-  const pageCameras = cameras.slice(pageStart, pageStart + pageSize);
+  const splitPageCount = Math.max(1, Math.ceil(cameras.length / splitPageSize));
+  const splitVisiblePage = Math.min(splitPageIndex, splitPageCount - 1);
+  const splitPageStart = splitVisiblePage * splitPageSize;
+  const splitPageCameras = cameras.slice(splitPageStart, splitPageStart + splitPageSize);
+  const panelPageCount = Math.max(1, Math.ceil(cameras.length / panelPageSize));
+  const panelVisiblePage = Math.min(panelPageIndex ?? internalPanelPageIndex, panelPageCount - 1);
+  const panelPageStart = panelVisiblePage * panelPageSize;
+  const panelPageCameras = cameras.slice(panelPageStart, panelPageStart + panelPageSize);
 
   const handleSelect = (id: number) => {
     setInternalSelected(id);
@@ -82,6 +91,11 @@ const CameraGrid: React.FC<CameraGridProps> = ({
   };
 
   const setSelectorOpen = (open: boolean) => {
+    if (open) {
+      const selectedPage = Math.floor((activeId - 1) / panelPageSize);
+      setInternalPanelPageIndex(selectedPage);
+      onPanelPageChange?.(selectedPage);
+    }
     setInternalSelectorOpen(open);
     onSelectorOpenChange?.(open);
   };
@@ -97,7 +111,7 @@ const CameraGrid: React.FC<CameraGridProps> = ({
           className="cam-grid cam-grid--split"
           style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gridTemplateRows: 'repeat(4, minmax(0, 1fr))' }}
         >
-          {pageCameras.map((cam) => (
+          {splitPageCameras.map((cam) => (
             <CameraTile
               key={cam.id}
               id={cam.id}
@@ -110,12 +124,12 @@ const CameraGrid: React.FC<CameraGridProps> = ({
 
         <div className={`cam-page-panel ${isSelectorOpen ? 'cam-page-panel--open' : ''}`}>
           <div className="cam-page-list">
-            {Array.from({ length: pageCount }, (_, i) => (
+            {Array.from({ length: splitPageCount }, (_, i) => (
               <button
                 key={i + 1}
                 type="button"
-                className={`cam-page-btn ${i === visiblePage ? 'cam-page-btn--active' : ''}`}
-                onClick={() => setPageIndex(i)}
+                className={`cam-page-btn ${i === splitVisiblePage ? 'cam-page-btn--active' : ''}`}
+                onClick={() => setSplitPageIndex(i)}
               >
                 {i + 1}
               </button>
@@ -139,8 +153,8 @@ const CameraGrid: React.FC<CameraGridProps> = ({
       </div>
 
       <div className={`cam-selector-panel ${isSelectorOpen ? 'cam-selector-panel--open' : ''}`}>
-        <div className="cam-grid cam-grid--panel" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-          {cameras.map((cam) => (
+        <div className="cam-grid cam-grid--panel" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+          {panelPageCameras.map((cam) => (
             <CameraTile
               key={cam.id}
               id={cam.id}

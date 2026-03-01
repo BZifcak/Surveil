@@ -98,7 +98,8 @@
 .cam-image {
   width: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
+  background: #000;
   aspect-ratio: 16 / 9;
 }
 
@@ -221,7 +222,7 @@
 
 .cam-grid--panel {
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
   align-content: start;
   grid-auto-rows: 1fr;
 }
