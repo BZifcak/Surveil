@@ -9,22 +9,52 @@ const imageModules = import.meta.glob<{ default: string }>('./cameras/*.{jpg,jpe
 const images = Object.values(imageModules).map((mod) => mod.default)
 
 function App() {
-  const [mode, setMode] = useState<Mode>('split')
+  const cameraCount = 12
+  const [mode, setMode] = useState<Mode>('map')
   const [selected, setSelected] = useState<number>(1)
+  const [cameraSelectorOpen, setCameraSelectorOpen] = useState<boolean>(false)
+
+  const setModeAndCloseSelector = (nextMode: Mode) => {
+    setMode(nextMode)
+    if (nextMode !== 'cam') {
+      setCameraSelectorOpen(false)
+    }
+  }
+
+  const shiftCamera = (delta: number) => {
+    setSelected((current) => {
+      const normalized = ((current - 1 + delta) % cameraCount + cameraCount) % cameraCount
+      return normalized + 1
+    })
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', margin: 0, minWidth: 0 }}>
       {/* Navbar */}
       <nav style={{
+        position: 'relative',
         display: 'flex',
         gap: '8px',
         padding: '10px 20px',
         backgroundColor: '#1a1a1a',
         borderBottom: '1px solid #333'
       }}>
-        <button onClick={() => setMode('map')} style={btnStyle(mode === 'map')}>Map</button>
-        <button onClick={() => setMode('cam')} style={btnStyle(mode === 'cam')}>Camera</button>
-        <button onClick={() => setMode('split')} style={btnStyle(mode === 'split')}>Split</button>
+        <button onClick={() => setModeAndCloseSelector('map')} style={btnStyle(mode === 'map')}>Map</button>
+        <button onClick={() => setModeAndCloseSelector('cam')} style={btnStyle(mode === 'cam')}>Camera</button>
+        <button onClick={() => setModeAndCloseSelector('split')} style={btnStyle(mode === 'split')}>Split</button>
+        {mode === 'cam' && (
+          <button
+            onClick={() => setCameraSelectorOpen((open) => !open)}
+            style={{
+              ...btnStyle(cameraSelectorOpen),
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}
+          >
+            Cameras
+          </button>
+        )}
       </nav>
 
       {/* Content */}
@@ -40,14 +70,49 @@ function App() {
         )}
 
         {(mode === 'cam' || mode === 'split') && (
-          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <button
+              onClick={() => shiftCamera(-1)}
+              style={arrowBtnStyle('left')}
+              aria-label="Previous camera"
+            >
+              ←
+            </button>
+            <button
+              onClick={() => shiftCamera(1)}
+              style={arrowBtnStyle('right')}
+              aria-label="Next camera"
+            >
+              →
+            </button>
+            {mode === 'split' && (
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 9,
+              }}>
+                <button
+                  onClick={() => setCameraSelectorOpen((open) => !open)}
+                  style={btnStyle(cameraSelectorOpen)}
+                >
+                  Cameras
+                </button>
+              </div>
+            )}
+            <div style={{ flex: 1, minHeight: 0 }}>
             <CameraGrid
-              cameraCount={12}
+              cameraCount={cameraCount}
               columns={6}
               images={images}
               selected={selected}
               onSelect={setSelected}
+              selectorOpen={cameraSelectorOpen}
+              onSelectorOpenChange={setCameraSelectorOpen}
+              edgeToEdge={mode === 'split'}
             />
+            </div>
           </div>
         )}
       </div>
@@ -64,6 +129,30 @@ function btnStyle(active: boolean): React.CSSProperties {
     backgroundColor: active ? '#555' : '#2a2a2a',
     color: active ? '#fff' : '#aaa',
     fontWeight: active ? 'bold' : 'normal',
+  }
+}
+
+function arrowBtnStyle(side: 'left' | 'right'): React.CSSProperties {
+  return {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    [side]: '12px',
+    zIndex: 9,
+    width: '40px',
+    height: '40px',
+    padding: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid #3a485a',
+    borderRadius: '999px',
+    cursor: 'pointer',
+    color: '#d9ecff',
+    fontSize: '22px',
+    fontWeight: 700,
+    lineHeight: 1,
+    background: 'linear-gradient(180deg, #2f3f53 0%, #1c2633 100%)',
   }
 }
 

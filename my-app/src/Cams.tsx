@@ -7,6 +7,9 @@ interface CameraGridProps {
   images?: string[];
   selected?: number;
   onSelect?: (id: number) => void;
+  selectorOpen?: boolean;
+  onSelectorOpenChange?: (open: boolean) => void;
+  edgeToEdge?: boolean;
 }
 
 function CameraTile({
@@ -32,7 +35,7 @@ function CameraTile({
         <img src={src} alt={`Camera ${id}`} className="cam-image" />
       ) : (
         <div className="cam-empty">
-          <span className="cam-empty-icon">CAM</span>
+          <span className="cam-empty-icon">CAM {id}</span>
           <span>No Signal</span>
         </div>
       )}
@@ -47,6 +50,9 @@ const CameraGrid: React.FC<CameraGridProps> = ({
   images = [],
   selected,
   onSelect,
+  selectorOpen,
+  onSelectorOpenChange,
+  edgeToEdge = false,
 }) => {
   const cameras = useMemo(
     () =>
@@ -58,6 +64,8 @@ const CameraGrid: React.FC<CameraGridProps> = ({
   );
 
   const [internalSelected, setInternalSelected] = useState<number>(1);
+  const [internalSelectorOpen, setInternalSelectorOpen] = useState<boolean>(false);
+  const isSelectorOpen = selectorOpen ?? internalSelectorOpen;
   const selectedId = selected ?? internalSelected;
   const activeId = cameras.some((cam) => cam.id === selectedId) ? selectedId : cameras[0]?.id;
   const featured = cameras.find((cam) => cam.id === activeId) ?? cameras[0];
@@ -67,12 +75,17 @@ const CameraGrid: React.FC<CameraGridProps> = ({
     onSelect?.(id);
   };
 
+  const setSelectorOpen = (open: boolean) => {
+    setInternalSelectorOpen(open);
+    onSelectorOpenChange?.(open);
+  };
+
   if (!featured) {
     return null;
   }
 
   return (
-    <div className="cam-layout">
+    <div className={`cam-layout ${edgeToEdge ? 'cam-layout--edge' : ''}`}>
       <div className="cam-featured">
         <CameraTile
           id={featured.id}
@@ -83,22 +96,20 @@ const CameraGrid: React.FC<CameraGridProps> = ({
         />
       </div>
 
-      <div className="cam-selector-dock">
-        <button type="button" className="cam-selector-handle" aria-label="Open camera selector">
-          Cameras
-        </button>
-        <div className="cam-selector-tray">
-          <div className="cam-grid cam-grid--tray" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-            {cameras.map((cam) => (
-              <CameraTile
-                key={cam.id}
-                id={cam.id}
-                src={cam.src}
-                selected={cam.id === activeId}
-                onClick={() => handleSelect(cam.id)}
-              />
-            ))}
-          </div>
+      <div className={`cam-selector-panel ${isSelectorOpen ? 'cam-selector-panel--open' : ''}`}>
+        <div className="cam-grid cam-grid--panel" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+          {cameras.map((cam) => (
+            <CameraTile
+              key={cam.id}
+              id={cam.id}
+              src={cam.src}
+              selected={cam.id === activeId}
+              onClick={() => {
+                handleSelect(cam.id);
+                setSelectorOpen(false);
+              }}
+            />
+          ))}
         </div>
       </div>
     </div>
