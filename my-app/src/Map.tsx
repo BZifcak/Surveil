@@ -6,7 +6,17 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 const locations = [
   { id: 1, longitude: -75.754, latitude: 39.680, label: 'Camera 1' },
   { id: 2, longitude: -75.756, latitude: 39.682, label: 'Camera 2' },
-  { id: 3, longitude: -75.7525923185931, latitude: 39.6805956047935, label: 'Camera 3'}
+  { id: 3, longitude: -75.7525923185931, latitude: 39.6805956047935, label: 'Camera 3'},
+  { id: 4, longtitude: -75.74838725868372, latitiude: 39.67713476915951, label: 'Camera 4'},
+  { id: 5, longitude: -75.75016194351606, latitude: 39.67656997674862, label: 'Camera 5'},
+  { id: 6, longitude: -75.74940763490758, latitude: 39.67758513315677, label: 'Camera 6'},
+  { id: 7, longitude:-75.75101222381147, latitude: 39.67938571144765, label: 'Camera 7'},
+  { id: 8, longitude: -75.74995908040515, latitude: 39.681231237836215, label: 'Camera 8' },
+  { id: 9, longitude: -75.74851252255588, latitude: 39.680870380930635, label: 'Camera 9'},
+  { id: 10, longitude: -75.75035782639361, latitude: 39.67531235608384, label: 'Camera 10'},
+  { id: 11, longitude: -75.75768872147658, latitude: 39.6896962765708, label: 'Camera 11'},
+  { id: 12, longitude: -75.75657717953996,latitude: 39.68935176073996,  label: 'Camera 12'}
+
 ]
 
 interface LoadMapProps {
