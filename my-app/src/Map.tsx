@@ -90,7 +90,7 @@ function CameraMarker({
             border: '1px solid #ef4444',
             pointerEvents: 'none',
           }}>
-            🚨 {formatEventType(lastEvent.event_type)} {Math.round(lastEvent.confidence * 100)}%
+            🚨 {formatEventType(lastEvent.event_type)}
             {/* Arrow */}
             <div style={{
               position: 'absolute',
@@ -124,10 +124,11 @@ export function LoadMap({ selected = 0, onSelect, camState }: LoadMapProps) {
   return (
     <Map
       initialViewState={{
-        longitude: -75.75408714292978,
-        latitude: 39.68053620506273,
+        longitude: -75.75147180667773,
+        latitude: 39.678657310264356,
         zoom: 16,
       }}
+      onClick={(e) => console.log('lat:', e.lngLat.lat, 'lng:', e.lngLat.lng)}
       style={{ width: '100%', height: '100%' }}
       mapStyle="mapbox://styles/bmzifcak/cmm6u08z2009a01scgggk0ws5"
       mapboxAccessToken={MAPBOX_TOKEN}

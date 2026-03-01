@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import './Cam.css'
 import type { CamState, CameraInfo } from './useBackend'
-import { BACKEND, formatEventType } from './useBackend'
+import { BACKEND, formatEventType, isThreatEvent } from './useBackend'
 
 interface CameraGridProps {
   cameraCount?: number
@@ -110,7 +110,7 @@ function CameraTile({
 
 function StatusPanel({ camId, state }: { camId: number; state?: CamState }) {
   const events = useMemo(
-    () => Object.values(state?.latestByType ?? {}).filter(e => e.event_type !== 'motion'),
+    () => Object.values(state?.latestByType ?? {}),
     [state?.latestByType]
   )
 
@@ -123,9 +123,9 @@ function StatusPanel({ camId, state }: { camId: number; state?: CamState }) {
         events.map((evt, i) => (
           <span
             key={i}
-            className={`cam-status-event ${evt.event_type === 'weapon_detected' ? 'cam-status-event--threat' : ''}`}
+            className={`cam-status-event ${isThreatEvent(evt.event_type) ? 'cam-status-event--threat' : evt.event_type === 'motion' ? 'cam-status-event--motion' : ''}`}
           >
-            {evt.event_type === 'person_detected' ? 'Person(s) detected' : formatEventType(evt.event_type)}
+            {evt.event_type === 'person_detected' ? 'Person(s) detected' : evt.event_type === 'motion' ? 'Motion Detected' : formatEventType(evt.event_type)}
           </span>
         ))
       )}

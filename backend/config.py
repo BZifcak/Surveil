@@ -31,14 +31,24 @@ DETECTION_FPS = 1
 DETECTION_DEVICE = "mps"  # "cpu" | "mps" (Apple Silicon) | "cuda" (NVIDIA GPU)
 PERSON_CONFIDENCE_THRESHOLD = 0.25
 WEAPON_CONFIDENCE_THRESHOLD = 0.50
-GEMINI_WEAPON_COOLDOWN_SECS = 30  # seconds between Gemini calls per camera (only fires when a person is detected — free tier is 2 RPM)
 MOTION_MIN_AREA = 200  # px² — contours smaller than this are noise
 
 # --- Demo toggles ---
 # Flip any of these and uvicorn --reload picks it up in ~1 second
 ENABLE_PERSON_DETECTION = True
 ENABLE_MOTION_DETECTION = True
-ENABLE_WEAPON_DETECTION = False  # uses local weapon.pt if present, else falls back to Gemini (requires GEMINI_API_KEY)
+ENABLE_WEAPON_DETECTION = True  # uses local weapon.pt if present, else falls back to Gemini (requires GEMINI_API_KEY)
+ENABLE_FIGHT_DETECTION = True
+
+# --- Fight detection thresholds ---
+FIGHT_POSE_CONFIDENCE_THRESHOLD = 0.25
+FIGHT_KEYPOINT_CONFIDENCE_MIN = 0.3
+FIGHT_PROXIMITY_RATIO = 0.8          # max center-dist / avg-bbox-diagonal (tighter = must be very close)
+FIGHT_ARM_INTRUSION_MARGIN = 0.02    # normalized margin for wrist-in-box check
+FIGHT_VELOCITY_THRESHOLD = 0.12      # normalized keypoint displacement/frame (higher = only fast swings)
+FIGHT_MIN_CRITERIA = 2               # of 3 non-proximity heuristics must fire (proximity is mandatory)
+FIGHT_SUSTAIN_FRAMES = 3             # criteria must hold for N consecutive frames to trigger
+FIGHT_EVENT_COOLDOWN_SECS = 3.0      # min seconds between fight events per cam
 
 # CORS
 ALLOWED_ORIGINS = ["*"]

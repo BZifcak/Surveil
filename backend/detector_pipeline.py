@@ -18,27 +18,26 @@ import logging
 
 import camera_manager
 from config import CAMERAS, DETECTION_FPS
-from detectors import GeminiWeaponDetector, MotionDetector, PersonDetector, WeaponDetector
+from detectors import FightDetector, MotionDetector, PersonDetector, WeaponDetector
 from websocket_manager import manager
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Instantiate all detectors once at import time.
-# Order: Person → Motion → local YOLO weapon → Gemini (fallback, person-gated)
+# Order: Person → Fight → Motion → Weapon (local YOLO)
 # WeaponDetector auto-disables if models/weapon.pt is absent.
-# GeminiWeaponDetector only fires when a person is present and weapon.pt is absent.
 # ---------------------------------------------------------------------------
 _person_detector = PersonDetector()
+_fight_detector = FightDetector()
 _weapon_detector = WeaponDetector()
-_gemini_detector = GeminiWeaponDetector()
 _motion_detector = MotionDetector()
 
 _detectors = [
     _person_detector,
+    _fight_detector,    # pose model — person events ORed with person_detector, + fight heuristics
     _motion_detector,
     _weapon_detector,   # fast local YOLO — no rate limit, runs every frame
-    _gemini_detector,   # slow API fallback — only fires when person present
 ]
 
 for _d in _detectors:
@@ -92,6 +91,59 @@ async def detection_loop() -> None:
             await asyncio.sleep(_PER_CAMERA_SLEEP)
 
 
+_PERSON_DEDUP_IOU_THRESHOLD = 0.5
+
+
+def _deduplicate_person_events(events: list[dict]) -> list[dict]:
+    """OR-merge person_detected events from PersonDetector and FightDetector.
+
+    For overlapping detections (IoU > threshold), keep the higher confidence one.
+    """
+    person_events = [e for e in events if e.get("event_type") == "person_detected"]
+    other_events = [e for e in events if e.get("event_type") != "person_detected"]
+
+    if len(person_events) <= 1:
+        for e in person_events:
+            e.pop("source", None)
+        return other_events + person_events
+
+    def _to_xyxy(bb: dict) -> tuple:
+        return (bb["x"], bb["y"], bb["x"] + bb["width"], bb["y"] + bb["height"])
+
+    indexed = [(e, _to_xyxy(e["bounding_box"])) for e in person_events]
+
+    suppressed = set()
+    for i in range(len(indexed)):
+        if i in suppressed:
+            continue
+        for j in range(i + 1, len(indexed)):
+            if j in suppressed:
+                continue
+            iou = _compute_iou(indexed[i][1], indexed[j][1])
+            if iou > _PERSON_DEDUP_IOU_THRESHOLD:
+                if indexed[i][0]["confidence"] >= indexed[j][0]["confidence"]:
+                    suppressed.add(j)
+                else:
+                    suppressed.add(i)
+                    break
+
+    kept = [indexed[k][0] for k in range(len(indexed)) if k not in suppressed]
+    for e in kept:
+        e.pop("source", None)
+
+    return other_events + kept
+
+
+def _compute_iou(box_a: tuple, box_b: tuple) -> float:
+    ax1, ay1, ax2, ay2 = box_a
+    bx1, by1, bx2, by2 = box_b
+    inter_x1, inter_y1 = max(ax1, bx1), max(ay1, by1)
+    inter_x2, inter_y2 = min(ax2, bx2), min(ay2, by2)
+    inter = max(0, inter_x2 - inter_x1) * max(0, inter_y2 - inter_y1)
+    union = (ax2 - ax1) * (ay2 - ay1) + (bx2 - bx1) * (by2 - by1) - inter
+    return inter / union if union > 1e-8 else 0.0
+
+
 def _run_detectors(frame, cam_id: str) -> list[dict]:
     """Synchronous — runs in thread executor so YOLO doesn't block the event loop."""
     all_events: list[dict] = []
@@ -99,12 +151,13 @@ def _run_detectors(frame, cam_id: str) -> list[dict]:
         if not detector.enabled:
             continue
         try:
-            if detector is _gemini_detector:
-                person_events = [e for e in all_events if e.get("event_type") == "person_detected"]
-                events = detector.detect(frame, cam_id, person_events=person_events)
-            else:
-                events = detector.detect(frame, cam_id)
+            events = detector.detect(frame, cam_id)
             all_events.extend(events)
+
+            # After FightDetector, deduplicate person events so downstream
+            # detectors see the clean merged person list
+            if detector is _fight_detector:
+                all_events = _deduplicate_person_events(all_events)
         except Exception as exc:
             logger.error(
                 "[pipeline] %s raised on %s: %s",

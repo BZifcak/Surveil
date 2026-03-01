@@ -73,6 +73,11 @@
   color: #ef4444;
 }
 
+.cam-status-event--motion {
+  color: #ffffff;
+  font-weight: 500;
+}
+
 /* ── Preview section (split mode bottom) ─────────────────────────────────── */
 .cam-preview-section {
   flex: 0 0 auto;

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { DetectionEvent } from './useBackend'
-import { formatEventType } from './useBackend'
+import { formatEventType, isThreatEvent } from './useBackend'
 import './Log.css'
 
 interface LogProps {
@@ -108,7 +108,7 @@ export default function Log({ events }: LogProps) {
           </thead>
           <tbody>
             {sorted.map((ev, i) => (
-              <tr key={i} className={ev.event_type === 'weapon_detected' ? 'log-row--threat' : ''}>
+              <tr key={i} className={isThreatEvent(ev.event_type) ? 'log-row--threat' : ''}>
                 <td>{new Date(ev.timestamp).toLocaleTimeString()}</td>
                 <td>{camLabel(ev.camera_id)}</td>
                 <td>{formatEventType(ev.event_type)}</td>

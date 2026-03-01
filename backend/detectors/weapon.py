@@ -4,7 +4,12 @@ from datetime import datetime, timezone
 import numpy as np
 from ultralytics import YOLO
 
-from config import DETECTION_DEVICE, ENABLE_WEAPON_DETECTION, MODEL_DIR, WEAPON_CONFIDENCE_THRESHOLD
+from config import (
+    DETECTION_DEVICE,
+    ENABLE_WEAPON_DETECTION,
+    MODEL_DIR,
+    WEAPON_CONFIDENCE_THRESHOLD,
+)
 from detectors.base import BaseDetector
 
 logger = logging.getLogger(__name__)
@@ -38,7 +43,11 @@ class WeaponDetector(BaseDetector):
             )
             return
 
-        logger.info("[WeaponDetector] Loading %s (device=%s)...", _WEIGHTS, DETECTION_DEVICE)
+        logger.info(
+            "[WeaponDetector] Loading %s (device=%s)...",
+            _WEIGHTS,
+            DETECTION_DEVICE,
+        )
         self._model = YOLO(str(_WEIGHTS))
         self._model.to(DETECTION_DEVICE)
         self._enabled = True
@@ -55,8 +64,13 @@ class WeaponDetector(BaseDetector):
     def enabled(self) -> bool:
         return self._enabled
 
+    # Cameras excluded from weapon detection (0-indexed: cam_10 = Camera 11)
+    _SKIP_CAMERAS = {"cam_10", "cam_3"}
+
     def detect(self, frame: np.ndarray, cam_id: str) -> list[dict]:
         if not self.enabled or self._model is None:
+            return []
+        if cam_id in self._SKIP_CAMERAS:
             return []
 
         h, w = frame.shape[:2]
@@ -72,24 +86,27 @@ class WeaponDetector(BaseDetector):
                 x1, y1, x2, y2 = box.xyxy[0].tolist()
                 cls_id = int(box.cls[0])
                 cls_name = (result.names or {}).get(cls_id, "weapon")
-                events.append({
-                    "camera_id": cam_id,
-                    "event_type": "weapon_detected",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "confidence": round(float(box.conf[0]), 3),
-                    "weapon_type": cls_name,
-                    "bounding_box": {
-                        "x":      round(x1 / w, 4),
-                        "y":      round(y1 / h, 4),
-                        "width":  round((x2 - x1) / w, 4),
-                        "height": round((y2 - y1) / h, 4),
-                    },
-                })
+                events.append(
+                    {
+                        "camera_id": cam_id,
+                        "event_type": "weapon_detected",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "confidence": round(float(box.conf[0]), 3),
+                        "weapon_type": cls_name,
+                        "bounding_box": {
+                            "x": round(x1 / w, 4),
+                            "y": round(y1 / h, 4),
+                            "width": round((x2 - x1) / w, 4),
+                            "height": round((y2 - y1) / h, 4),
+                        },
+                    }
+                )
 
         if events:
             logger.info(
                 "[WeaponDetector] %d weapon(s) on %s: %s",
-                len(events), cam_id,
+                len(events),
+                cam_id,
                 [e["weapon_type"] for e in events],
             )
 

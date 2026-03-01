@@ -7,6 +7,11 @@ export function formatEventType(type: string): string {
 }
 const WS_URL = 'ws://localhost:8000/ws/events'
 const THREAT_WINDOW_MS = 10_000
+const THREAT_TYPES = new Set(['weapon_detected', 'fight_detected'])
+
+export function isThreatEvent(eventType: string): boolean {
+  return THREAT_TYPES.has(eventType)
+}
 
 export interface CameraInfo {
   id: string             // "cam_0"
@@ -76,7 +81,7 @@ export function useBackend() {
         try {
           const ev: DetectionEvent = JSON.parse(e.data)
           logBufferRef.current.push(ev)
-          if (ev.event_type === 'weapon_detected') {
+          if (isThreatEvent(ev.event_type)) {
             setThreatCount(c => c + 1)
           }
           setCamState(prev => {
@@ -92,7 +97,7 @@ export function useBackend() {
               ...prev,
               [ev.camera_id]: {
                 latestByType,
-                hasThreat: !!latestByType['weapon_detected'],
+                hasThreat: !!latestByType['weapon_detected'] || !!latestByType['fight_detected'],
                 hasActivity: true,
                 lastEvent,
               },
@@ -126,7 +131,7 @@ export function useBackend() {
             !a || new Date(b.timestamp) > new Date(a.timestamp) ? b : a, null)
           next[id] = {
             latestByType: fresh,
-            hasThreat: !!fresh['weapon_detected'],
+            hasThreat: !!fresh['weapon_detected'] || !!fresh['fight_detected'],
             hasActivity: true,
             lastEvent,
           }
