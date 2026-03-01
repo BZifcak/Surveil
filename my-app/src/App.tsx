@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './App.css'
 import { LoadMap } from './Map'
 import CameraGrid from './Cams'
 
-type Mode = 'map' | 'cam' | 'split'
+type Mode =  'cam' | 'split'
 
 const imageModules = import.meta.glob<{ default: string }>('./images/*.{jpg,jpeg,png,webp,gif}', { eager: true })
 const images = Object.values(imageModules).map((mod) => mod.default)
@@ -27,35 +27,6 @@ function App() {
       return normalized + 1
     })
   }
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          (target as HTMLElement).isContentEditable)
-      ) {
-        return
-      }
-
-      if (mode !== 'cam' && mode !== 'split') {
-        return
-      }
-
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-        event.preventDefault()
-        shiftCamera(-1)
-      } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-        event.preventDefault()
-        shiftCamera(1)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [mode])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', margin: 0, minWidth: 0 }}>
@@ -87,7 +58,7 @@ function App() {
 
       {/* Content */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minWidth: 0 }}>
-        {(mode === 'map' || mode === 'split') && (
+        {(mode === 'split') && (
           <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
             <LoadMap selected={selected} onSelect={setSelected} />
           </div>
@@ -99,28 +70,40 @@ function App() {
 
         {(mode === 'cam' || mode === 'split') && (
           <div style={{ flex: 1, overflow: 'hidden', minWidth: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            {mode === 'cam' && (
-              <>
+            <button
+              onClick={() => shiftCamera(-1)}
+              style={arrowBtnStyle('left')}
+              aria-label="Previous camera"
+            >
+              ←
+            </button>
+            <button
+              onClick={() => shiftCamera(1)}
+              style={arrowBtnStyle('right')}
+              aria-label="Next camera"
+            >
+              →
+            </button>
+            {mode === 'split' && (
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 9,
+              }}>
                 <button
-                  onClick={() => shiftCamera(-1)}
-                  style={arrowBtnStyle('left')}
-                  aria-label="Previous camera"
+                  onClick={() => setCameraSelectorOpen((open) => !open)}
+                  style={btnStyle(cameraSelectorOpen)}
                 >
-                  ←
-                </button>
-                <button
-                  onClick={() => shiftCamera(1)}
-                  style={arrowBtnStyle('right')}
-                  aria-label="Next camera"
-                >
-                  →
-                </button>
-              </>
+                  Cameras
+        </button>
+      </div>
             )}
             <div style={{ flex: 1, minHeight: 0 }}>
             <CameraGrid
               cameraCount={cameraCount}
-              columns={4}
+              columns={6}
               images={images}
               selected={selected}
               onSelect={setSelected}
