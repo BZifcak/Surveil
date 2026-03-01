@@ -1,34 +1,102 @@
-import { CircleMarker, MapContainer, TileLayer, Tooltip } from 'react-leaflet'
+import L from 'leaflet'
+import { useMemo } from 'react'
+import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import './Map.css'
+import type { CamState } from './useBackend'
+import { formatEventType } from './useBackend'
 
 type CameraLocation = {
   id: number
-  longitude: number
-  latitude: number
+  lat: number
+  lng: number
   label: string
 }
 
 const locations: CameraLocation[] = [
-  { id: 1, longitude: -75.754, latitude: 39.68, label: 'Camera 1' },
-  { id: 2, longitude: -75.756, latitude: 39.682, label: 'Camera 2' },
-  { id: 3, longitude: -75.7525923185931, latitude: 39.6805956047935, label: 'Camera 3' },
-  { id: 4, longitude: -75.74838725868372, latitude: 39.67713476915951, label: 'Camera 4' },
-  { id: 5, longitude: -75.75016194351606, latitude: 39.67656997674862, label: 'Camera 5' },
-  { id: 6, longitude: -75.74940763490758, latitude: 39.67758513315677, label: 'Camera 6' },
-  { id: 7, longitude: -75.75101222381147, latitude: 39.67938571144765, label: 'Camera 7' },
-  { id: 8, longitude: -75.74995908040515, latitude: 39.681231237836215, label: 'Camera 8' },
-  { id: 9, longitude: -75.74851252255588, latitude: 39.680870380930635, label: 'Camera 9' },
-  { id: 10, longitude: -75.75035782639361, latitude: 39.67531235608384, label: 'Camera 10' },
-  { id: 11, longitude: -75.75768872147658, latitude: 39.6896962765708, label: 'Camera 11' },
-  { id: 12, longitude: -75.75657717953996, latitude: 39.68935176073996, label: 'Camera 12' },
+  { id: 0,  lat: 39.68000, lng: -75.75400, label: 'Main Entrance' },
+  { id: 1,  lat: 39.68200, lng: -75.75600, label: 'Lobby' },
+  { id: 2,  lat: 39.68060, lng: -75.75259, label: 'Parking Lot A' },
+  { id: 3,  lat: 39.67713, lng: -75.74839, label: 'Parking Lot B' },
+  { id: 4,  lat: 39.67657, lng: -75.75016, label: 'Stairwell North' },
+  { id: 5,  lat: 39.67759, lng: -75.74941, label: 'Stairwell South' },
+  { id: 6,  lat: 39.67939, lng: -75.75101, label: 'Server Room' },
+  { id: 7,  lat: 39.68123, lng: -75.74996, label: 'Loading Dock' },
+  { id: 8,  lat: 39.68087, lng: -75.74851, label: 'Rooftop' },
+  { id: 9,  lat: 39.67531, lng: -75.75036, label: 'Courtyard' },
+  { id: 10, lat: 39.68970, lng: -75.75769, label: 'Side Entrance' },
+  { id: 11, lat: 39.68935, lng: -75.75658, label: 'Gymnasium' },
 ]
 
 interface LoadMapProps {
   selected?: number
   onSelect?: (id: number) => void
+  camState?: Record<string, CamState>
 }
 
-export function LoadMap({ selected = locations[0].id, onSelect }: LoadMapProps) {
+function CameraMarker({
+  loc,
+  isSelected,
+  state,
+  onSelect,
+}: {
+  loc: CameraLocation
+  isSelected: boolean
+  state?: CamState
+  onSelect?: (id: number) => void
+}) {
+  const hasThreat = state?.hasThreat ?? false
+  const hasActivity = state?.hasActivity ?? false
+  const lastEvent = state?.lastEvent
+
+  const icon = useMemo(() => {
+    const color = hasThreat ? '#ef4444' : '#22c55e'
+    const dotSize = 14
+
+    const borderStyle = isSelected
+      ? `box-shadow: 0 0 0 3px #000; border: none;`
+      : `border: 2px solid rgba(255,255,255,0.55);`
+
+    const threatClass = hasThreat ? 'map-dot--threat' : ''
+
+    const bubbleHtml = hasThreat && lastEvent
+      ? `<div class="map-bubble">
+           <span class="map-bubble-text">
+             &#x1F6A8; ${formatEventType(lastEvent.event_type)}
+             &nbsp;${Math.round(lastEvent.confidence * 100)}%
+           </span>
+           <span class="map-bubble-arrow"></span>
+         </div>`
+      : ''
+
+    return L.divIcon({
+      className: 'map-marker-host',
+      html: `<div class="map-dot-wrap">
+               <div class="map-dot ${threatClass}" style="
+                 width: ${dotSize}px;
+                 height: ${dotSize}px;
+                 background: ${color};
+                 border-radius: 50%;
+                 ${borderStyle}
+               "></div>
+               ${bubbleHtml}
+             </div>`,
+      iconSize: [dotSize + 10, dotSize + 10],
+      iconAnchor: [(dotSize + 10) / 2, (dotSize + 10) / 2],
+    })
+  }, [hasThreat, hasActivity, isSelected, lastEvent])
+
+  return (
+    <Marker
+      position={[loc.lat, loc.lng]}
+      icon={icon}
+      title={loc.label}
+      eventHandlers={{ click: () => onSelect?.(loc.id) }}
+    />
+  )
+}
+
+export function LoadMap({ selected = 0, onSelect, camState }: LoadMapProps) {
   return (
     <MapContainer
       center={[39.68053620506273, -75.75408714292978]}
@@ -41,20 +109,13 @@ export function LoadMap({ selected = locations[0].id, onSelect }: LoadMapProps) 
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {locations.map((loc) => (
-        <CircleMarker
+        <CameraMarker
           key={loc.id}
-          center={[loc.latitude, loc.longitude]}
-          radius={loc.id === selected ? 14 : 10}
-          pathOptions={{
-            color: '#dbedff',
-            weight: loc.id === selected ? 8 : 6,
-            fillColor: '#56a9fc',
-            fillOpacity: 1,
-          }}
-          eventHandlers={{ click: () => onSelect?.(loc.id) }}
-        >
-          <Tooltip>{loc.label}</Tooltip>
-        </CircleMarker>
+          loc={loc}
+          isSelected={loc.id === selected}
+          state={camState?.[`cam_${loc.id}`]}
+          onSelect={onSelect}
+        />
       ))}
     </MapContainer>
   )
