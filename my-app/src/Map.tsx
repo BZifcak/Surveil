@@ -1,15 +1,15 @@
-import L from 'leaflet'
+import Map, { Marker } from 'react-map-gl/mapbox'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { useMemo } from 'react'
-import { MapContainer, Marker, TileLayer } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
-import './Map.css'
 import type { CamState } from './useBackend'
 import { formatEventType } from './useBackend'
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
+
 type CameraLocation = {
   id: number
-  lat: number
   lng: number
+  lat: number
   label: string
 }
 
@@ -49,65 +49,89 @@ function CameraMarker({
   const hasActivity = state?.hasActivity ?? false
   const lastEvent = state?.lastEvent
 
-  const icon = useMemo(() => {
-    const color = hasThreat ? '#ef4444' : '#22c55e'
-    const dotSize = 14
+  const markerStyle = useMemo(() => {
+    const color = hasThreat ? '#ef4444' : '#91ff95'
 
-    const borderStyle = isSelected
-      ? `box-shadow: 0 0 0 3px #000; border: none;`
-      : `border: 2px solid rgba(255,255,255,0.55);`
-
-    const threatClass = hasThreat ? 'map-dot--threat' : ''
-
-    const bubbleHtml = hasThreat && lastEvent
-      ? `<div class="map-bubble">
-           <span class="map-bubble-text">
-             &#x1F6A8; ${formatEventType(lastEvent.event_type)}
-             &nbsp;${Math.round(lastEvent.confidence * 100)}%
-           </span>
-           <span class="map-bubble-arrow"></span>
-         </div>`
-      : ''
-
-    return L.divIcon({
-      className: 'map-marker-host',
-      html: `<div class="map-dot-wrap">
-               <div class="map-dot ${threatClass}" style="
-                 width: ${dotSize}px;
-                 height: ${dotSize}px;
-                 background: ${color};
-                 border-radius: 50%;
-                 ${borderStyle}
-               "></div>
-               ${bubbleHtml}
-             </div>`,
-      iconSize: [dotSize + 10, dotSize + 10],
-      iconAnchor: [(dotSize + 10) / 2, (dotSize + 10) / 2],
-    })
-  }, [hasThreat, hasActivity, isSelected, lastEvent])
+    return {
+      width: isSelected ? '15px' : '15px',
+      height: isSelected ? '15px' : '15px',
+      backgroundColor:color,
+      borderRadius: '50%',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      border: isSelected
+        ? '2px solid #000000'
+        : '2px solid rgb(227, 255, 251)',
+      boxShadow: hasThreat ? '0 0 8px #ef4444' : 'none',
+    }
+  }, [hasThreat, hasActivity, isSelected])
 
   return (
     <Marker
-      position={[loc.lat, loc.lng]}
-      icon={icon}
-      title={loc.label}
-      eventHandlers={{ click: () => onSelect?.(loc.id) }}
-    />
+      longitude={loc.lng}
+      latitude={loc.lat}
+      anchor="center"
+    >
+      <div style={{ position: 'relative' }}>
+        {/* Threat bubble */}
+        {hasThreat && lastEvent && (
+          <div style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: '6px',
+            backgroundColor: '#1a1a1a',
+            color: '#ef4444',
+            borderRadius: '6px',
+            padding: '4px 8px',
+            fontSize: '11px',
+            whiteSpace: 'nowrap',
+            border: '1px solid #ef4444',
+            pointerEvents: 'none',
+          }}>
+            🚨 {formatEventType(lastEvent.event_type)} {Math.round(lastEvent.confidence * 100)}%
+            {/* Arrow */}
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '5px solid transparent',
+              borderRight: '5px solid transparent',
+              borderTop: '5px solid #ef4444',
+            }} />
+          </div>
+        )}
+
+        {/* Dot */}
+        <div
+          style={markerStyle}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            onSelect?.(loc.id)
+          }}
+          title={loc.label}
+        />
+      </div>
+    </Marker>
   )
 }
 
 export function LoadMap({ selected = 0, onSelect, camState }: LoadMapProps) {
   return (
-    <MapContainer
-      center={[39.68053620506273, -75.75408714292978]}
-      zoom={16}
+    <Map
+      initialViewState={{
+        longitude: -75.75408714292978,
+        latitude: 39.68053620506273,
+        zoom: 16,
+      }}
       style={{ width: '100%', height: '100%' }}
-      scrollWheelZoom
+      mapStyle="mapbox://styles/bmzifcak/cmm6u08z2009a01scgggk0ws5"
+      mapboxAccessToken={MAPBOX_TOKEN}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
       {locations.map((loc) => (
         <CameraMarker
           key={loc.id}
@@ -117,6 +141,6 @@ export function LoadMap({ selected = 0, onSelect, camState }: LoadMapProps) {
           onSelect={onSelect}
         />
       ))}
-    </MapContainer>
+    </Map>
   )
 }
