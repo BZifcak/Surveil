@@ -1,13 +1,22 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from typing import List
 
+from dotenv import load_dotenv
+load_dotenv()  # loads backend/.env before detector imports read os.environ
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s [%(name)s] %(message)s",
+)
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 import camera_manager
-import mock_detector
+import detector_pipeline
 from config import ALLOWED_ORIGINS, CAMERAS
 from models import CameraStatus
 from streamer import mjpeg_stream
@@ -17,7 +26,7 @@ from websocket_manager import manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     camera_manager.init_cameras()
-    detector_task = asyncio.create_task(mock_detector.detection_loop())
+    detector_task = asyncio.create_task(detector_pipeline.detection_loop())
     yield
     detector_task.cancel()
     try:
@@ -44,6 +53,11 @@ def _require_cam(cam_id: str):
     if cam_id not in VALID_CAM_IDS:
         raise HTTPException(status_code=404, detail=f"Camera '{cam_id}' not found")
     return camera_manager.get_capture(cam_id)
+
+
+@app.get("/.well-known/appspecific/com.chrome.devtools.json", include_in_schema=False)
+async def chrome_devtools():
+    return JSONResponse({})
 
 
 @app.get("/cameras", response_model=List[CameraStatus])

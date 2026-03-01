@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 import cv2
+import numpy as np
 
 from config import CAMERAS, JPEG_QUALITY, VIDEOS_DIR
 from models import CameraStatus
@@ -14,6 +15,7 @@ class CameraCapture:
         self._cap: Optional[cv2.VideoCapture] = None
         self._lock = threading.Lock()
         self._online = False
+        self._latest_frame: Optional[np.ndarray] = None
         self._open()
 
     def _open(self) -> None:
@@ -41,8 +43,20 @@ class CameraCapture:
                 ret, frame = self._cap.read()
                 if not ret:
                     return None
-            ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
+            self._latest_frame = frame
+            ok, buf = cv2.imencode(
+                ".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY]
+            )
             return bytes(buf) if ok else None
+
+    def get_latest_frame(self) -> Optional[np.ndarray]:
+        """Return a copy of the most recently decoded frame as a numpy array.
+        Returns None if no frame has been decoded yet or camera is offline.
+        """
+        with self._lock:
+            if self._latest_frame is None:
+                return None
+            return self._latest_frame.copy()
 
     def release(self) -> None:
         with self._lock:
@@ -50,6 +64,7 @@ class CameraCapture:
                 self._cap.release()
                 self._cap = None
             self._online = False
+            self._latest_frame = None
 
 
 _captures: dict[str, CameraCapture] = {}
