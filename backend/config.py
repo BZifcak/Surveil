@@ -38,7 +38,7 @@ MOTION_MIN_AREA = 200  # px² — contours smaller than this are noise
 # Flip any of these and uvicorn --reload picks it up in ~1 second
 ENABLE_PERSON_DETECTION = True
 ENABLE_MOTION_DETECTION = True
-ENABLE_WEAPON_DETECTION = True  # uses local weapon.pt if present, else falls back to Gemini (requires GEMINI_API_KEY)
+ENABLE_WEAPON_DETECTION = False  # uses local weapon.pt if present, else falls back to Gemini (requires GEMINI_API_KEY)
 
 # CORS
 ALLOWED_ORIGINS = ["*"]

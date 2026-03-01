@@ -7,38 +7,131 @@
   text-align: left;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* ── Navbar ──────────────────────────────────────────────────────────────── */
+.app-navbar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #333;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.app-nav-btn {
+  padding: 7px 18px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #2a2a2a;
+  color: #aaa;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 150ms, color 150ms, border-color 150ms;
 }
 
-.card {
-  padding: 2em;
+.app-nav-btn:hover {
+  background-color: #383838;
+  color: #ddd;
+  border-color: transparent;
 }
 
-.read-the-docs {
-  color: #888;
+.app-nav-btn--active {
+  background-color: #555;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ── Keyboard hint button ────────────────────────────────────────────────── */
+.app-hint-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-left: 4px;
+  border-radius: 6px;
+  border: 1px solid #3a485a;
+  background: #2a2a2a;
+  color: #8a9bb5;
+  cursor: pointer;
+  transition: color 150ms, border-color 150ms, background 150ms;
+}
+
+.app-hint-btn:hover {
+  color: #d9ecff;
+  border-color: #6ab6ff;
+  background: #333;
+}
+
+/* ── Tooltip (Radix) ─────────────────────────────────────────────────────── */
+.app-tooltip {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #3a485a;
+  background: #141c27;
+  color: #d9ecff;
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  animation: tooltip-in 150ms ease;
+}
+
+@keyframes tooltip-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.app-tooltip-title {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a9bb5;
+  margin-bottom: 6px;
+}
+
+.app-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0;
+  color: #c0d0e0;
+}
+
+.app-tooltip-key {
+  display: inline-block;
+  min-width: 24px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #3a485a;
+  background: #1c2633;
+  color: #d9ecff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.app-tooltip-arrow {
+  fill: #141c27;
+}
+
+/* ── Threat badge ────────────────────────────────────────────────────────── */
+.app-threat-badge {
+  position: absolute;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #ff8080;
+  font-size: 13px;
+  font-weight: 700;
 }

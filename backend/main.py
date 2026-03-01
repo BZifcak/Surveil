@@ -3,6 +3,8 @@ import logging
 from contextlib import asynccontextmanager
 from typing import List
 
+import fastapi.responses
+
 from dotenv import load_dotenv
 load_dotenv()  # loads backend/.env before detector imports read os.environ
 
@@ -71,6 +73,21 @@ async def stream_camera(cam_id: str):
     return StreamingResponse(
         mjpeg_stream(cap),
         media_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
+
+@app.get("/snapshot/{cam_id}")
+async def snapshot_camera(cam_id: str):
+    cap = _require_cam(cam_id)
+    loop = asyncio.get_event_loop()
+    frame_bytes = await loop.run_in_executor(None, cap.read_frame)
+    if frame_bytes is None:
+        from streamer import OFFLINE_FRAME
+        frame_bytes = OFFLINE_FRAME
+    return fastapi.responses.Response(
+        content=frame_bytes,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "no-store"},
     )
 
 
