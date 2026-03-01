@@ -5,15 +5,15 @@ import CameraGrid from './Cams'
 
 type Mode = 'map' | 'cam' | 'split'
 
-const imageModules = import.meta.glob('./cameras/*.{jpg,jpeg,png,webp,gif}', { eager: true })
-const images = Object.values(imageModules).map((mod: any) => mod.default)
+const imageModules = import.meta.glob<{ default: string }>('./cameras/*.{jpg,jpeg,png,webp,gif}', { eager: true })
+const images = Object.values(imageModules).map((mod) => mod.default)
 
 function App() {
   const [mode, setMode] = useState<Mode>('split')
   const [selected, setSelected] = useState<number>(1)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', margin: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', margin: 0, minWidth: 0 }}>
       {/* Navbar */}
       <nav style={{
         display: 'flex',
@@ -28,9 +28,9 @@ function App() {
       </nav>
 
       {/* Content */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minWidth: 0 }}>
         {(mode === 'map' || mode === 'split') && (
-          <div style={{ flex: 1, overflow: 'hidden' }}>
+          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
             <LoadMap selected={selected} onSelect={setSelected} />
           </div>
         )}
@@ -40,7 +40,7 @@ function App() {
         )}
 
         {(mode === 'cam' || mode === 'split') && (
-          <div style={{ flex: 1, overflow: 'hidden' }}>
+          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
             <CameraGrid
               cameraCount={12}
               columns={6}

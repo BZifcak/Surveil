@@ -61,7 +61,6 @@ const CameraGrid: React.FC<CameraGridProps> = ({
   const selectedId = selected ?? internalSelected;
   const activeId = cameras.some((cam) => cam.id === selectedId) ? selectedId : cameras[0]?.id;
   const featured = cameras.find((cam) => cam.id === activeId) ?? cameras[0];
-  const rest = cameras.filter((cam) => cam.id !== featured?.id);
 
   const handleSelect = (id: number) => {
     setInternalSelected(id);
@@ -84,16 +83,23 @@ const CameraGrid: React.FC<CameraGridProps> = ({
         />
       </div>
 
-      <div className="cam-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-        {rest.map((cam) => (
-          <CameraTile
-            key={cam.id}
-            id={cam.id}
-            src={cam.src}
-            selected={cam.id === activeId}
-            onClick={() => handleSelect(cam.id)}
-          />
-        ))}
+      <div className="cam-selector-dock">
+        <button type="button" className="cam-selector-handle" aria-label="Open camera selector">
+          Cameras
+        </button>
+        <div className="cam-selector-tray">
+          <div className="cam-grid cam-grid--tray" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+            {cameras.map((cam) => (
+              <CameraTile
+                key={cam.id}
+                id={cam.id}
+                src={cam.src}
+                selected={cam.id === activeId}
+                onClick={() => handleSelect(cam.id)}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
