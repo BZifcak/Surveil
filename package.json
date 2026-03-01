@@ -4,6 +4,7 @@
   "description": "Integrated Security Application",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,magenta\" \"cd backend && uvicorn main:app --reload --port 8000\" \"cd my-app && npm run dev\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/BZifcak/Surveil/issues"
   },
-  "homepage": "https://github.com/BZifcak/Surveil#readme"
+  "homepage": "https://github.com/BZifcak/Surveil#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
