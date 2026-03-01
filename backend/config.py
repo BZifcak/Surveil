@@ -16,6 +16,9 @@ CAMERAS = [
         "Server Room",
         "Loading Dock",
         "Rooftop",
+        "Courtyard",
+        "Side Entrance",
+        "Gymnasium",
     ])
 ]
 
