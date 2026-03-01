@@ -80,6 +80,10 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', margin: 0, minWidth: 0 }}>
         {/* Navbar */}
         <nav className="app-navbar">
+          <div className="app-brand">
+            <img src="/vite.svg" alt="logo" style={{color:'black'}} />
+            Surveil
+          </div>
           <button onClick={() => setMode('split')} className={`app-nav-btn ${mode === 'split' ? 'app-nav-btn--active' : ''}`}>Split</button>
           <button onClick={() => setMode('cam')} className={`app-nav-btn ${mode === 'cam' ? 'app-nav-btn--active' : ''}`}>Grid</button>
           <button onClick={() => setMode('log')} className={`app-nav-btn ${mode === 'log' ? 'app-nav-btn--active' : ''}`}>Log</button>
