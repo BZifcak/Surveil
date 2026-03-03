@@ -44,7 +44,7 @@ Keyboard shortcuts let officers switch views instantly — `A` for Split, `D` fo
 
 ### Backend
 - **Python 3.12 + FastAPI + Uvicorn** — Async server handling simultaneous camera streams, AI inference, and WebSocket broadcasting
-- **OpenCV** — Video capture and MJPEG streaming (~15 fps per camera)
+- **OpenCV** — Video capture and MJPEG streaming. MOG2 motion detection.
 - **MJPEG streaming** — Live video delivered to the frontend over HTTP
 
 ### AI Detection Pipeline
@@ -59,19 +59,17 @@ Detection runs continuously across all feeds in a round-robin loop at 1 frame/se
 
 ---
 
-## AI Models
-
-### Custom Weapon Detection Model
+## Custom Weapon Detection Model
 We trained a custom YOLOv11n model on a dataset of 5,149 real CCTV frames (1920×1080) specifically because off-the-shelf models trained on clean stock photos fail on grainy surveillance footage.
 
-**Dataset:** [frankmurphy24/cctv-weapon-detector](https://www.kaggle.com/datasets/frankmurphy24/cctv-weapon-detector) on Kaggle
+**Dataset:** [Real-time gun detection in CCTV: An open problem](https://deepknowledge-us.github.io/US-Real-time-gun-detection-in-CCTV-An-open-problem-dataset/)
 - 1,534 positive frames with weapon annotations
 - 3,615 negative frames
 - 2,721 total annotations across 3 classes: handgun, rifle, knife
 
 **Training:** 150 epochs, YOLOv11n (nano), 640px, batch size 128, dual NVIDIA T4 GPUs on Kaggle. Augmentations tuned for CCTV: HSV jitter, rotation, horizontal flip, mosaic, mixup, and copy-paste. Output weights: `backend/models/weapon.pt` (5.5 MB).
 
-If local weights are unavailable, the system falls back to the Google Gemini API for weapon detection.
+**View on Kaggle:** [frankmurphy24/cctv-weapon-detector](https://www.kaggle.com/datasets/frankmurphy24/cctv-weapon-detector)
 
 ### Fight Detection
 Uses YOLOv8n-pose to detect 17 skeletal keypoints per person and evaluates 4 behavioral criteria simultaneously: proximity, arm intrusion, rapid limb movement, and aggressive posture. An alert requires proximity plus 2 of the other 3 criteria, sustained for 3 consecutive frames, with a 3-second cooldown per camera.
@@ -107,8 +105,9 @@ uvicorn main:app --reload
 
 ## Demo Footage
 
-The 12 camera feeds in the demo (cam_0 through cam_11) are sourced from the [VIRAT Video Dataset](https://viratdata.org/) — a DARPA-funded large-scale surveillance benchmark — to simulate realistic campus camera deployment.
-
+The 12 camera feeds in the demo (cam_0 through cam_11) are sourced from two datasets:
+- the [VIRAT Video Dataset](https://viratdata.org/) — a DARPA-funded large-scale surveillance benchmark — to simulate realistic campus camera deployment.
+- dataset from [Real-time gun detection in CCTV: An open problem](https://deepknowledge-us.github.io/US-Real-time-gun-detection-in-CCTV-An-open-problem-dataset/)
 ---
 
 ## Citations
