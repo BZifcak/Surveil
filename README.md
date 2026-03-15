@@ -69,7 +69,7 @@ We trained a custom YOLOv11n model on a dataset of 5,149 real CCTV frames (1920Ã
 
 **Training:** 150 epochs, YOLOv11n (nano), 640px, batch size 128, dual NVIDIA T4 GPUs on Kaggle. Augmentations tuned for CCTV: HSV jitter, rotation, horizontal flip, mosaic, mixup, and copy-paste. Output weights: `backend/models/weapon.pt` (5.5 MB).
 
-**View on Kaggle:** [frankmurphy24/cctv-weapon-detector](https://www.kaggle.com/datasets/frankmurphy24/cctv-weapon-detector)
+**View on Kaggle:** [frankmurphy24/cctv-weapon-detector](https://www.kaggle.com/code/frankmurphy24/cctv-weapon-detector)
 
 ### Fight Detection
 Uses YOLOv8n-pose to detect 17 skeletal keypoints per person and evaluates 4 behavioral criteria simultaneously: proximity, arm intrusion, rapid limb movement, and aggressive posture. An alert requires proximity plus 2 of the other 3 criteria, sustained for 3 consecutive frames, with a 3-second cooldown per camera.
